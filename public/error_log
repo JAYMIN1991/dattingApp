@@ -1,0 +1,6 @@
+[08-Apr-2022 17:50:18 UTC] PHP Warning:  Unsupported declare 'strict_types' in /home/kkrinsigames/public_html/datingApp/vendor/ramsey/uuid/src/functions.php on line 14
+[08-Apr-2022 17:50:18 UTC] PHP Parse error:  syntax error, unexpected '?', expecting variable (T_VARIABLE) in /home/kkrinsigames/public_html/datingApp/vendor/ramsey/uuid/src/functions.php on line 34
+[03-Jun-2022 09:55:34 UTC] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 68701152 bytes) in /home/kkrinsigames/public_html/datingApp/vendor/symfony/var-dumper/Dumper/AbstractDumper.php on line 141
+[03-Jun-2022 09:56:23 UTC] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 68701152 bytes) in /home/kkrinsigames/public_html/datingApp/vendor/symfony/var-dumper/Dumper/AbstractDumper.php on line 141
+[20-Jul-2022 12:28:44 UTC] PHP Fatal error:  Cannot use isset() on the result of an expression (you can use "null !== expression" instead) in /home/kkrinsigames/public_html/datingApp/app/Http/Controllers/Controller.php on line 475
+[20-Jul-2022 12:31:55 UTC] PHP Fatal error:  Cannot use isset() on the result of an expression (you can use "null !== expression" instead) in /home/kkrinsigames/public_html/datingApp/app/Http/Controllers/Controller.php on line 475

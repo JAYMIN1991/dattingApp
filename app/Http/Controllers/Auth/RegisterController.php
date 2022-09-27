@@ -78,9 +78,9 @@ class RegisterController extends Controller
 
         ]);
 
-        Mail::to($user->email)
-            ->queue(new SendWelcomeEmail($user));
-
+         Mail::to($user->email)
+             ->queue(new SendWelcomeEmail($user));
+        //return response()->json(['success' => true, 'message' => "You have successfully register."]);
         return $user;
     }
 }

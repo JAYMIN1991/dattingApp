@@ -22,7 +22,20 @@ class UpdateUserProfileRequest extends FormRequest
             'description' => ['required', 'min:10', 'max:500'],
             'relationship' => ['required'],
             'country' => ['required'],
-            'languages' => ['required', 'min:2', 'max:255']
+            'languages' => ['required', 'min:2', 'max:255'],
+            'religion' => ['required'],
+            'marital_status' => ['required'],
+            'children' => ['required'],
+            'want_children' => ['required'],
+            'drinks' => ['required'],
+            'smokes' => ['required'],
+            'prefession' => ['required'],
+            'interests' => ['required'],
+            'DOB' => ['required'],
+            'location' => ['required'],
+            'here_for' => ['required'],
+            'height' => ['required'],
+            'body_type' => ['required']
         ];
     }
 }

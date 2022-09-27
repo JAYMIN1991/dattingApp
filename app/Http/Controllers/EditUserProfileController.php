@@ -53,7 +53,20 @@ class EditUserProfileController extends Controller
             'description' => $request->get('description'),
             'relationship' => $request->get('relationship'),
             'country' => $request->get('country'),
-            'languages' => $request->get('languages')
+            'languages' => $request->get('languages'),
+            'religion' => $request->get('religion'),
+            'marital_status' => $request->get('marital_status'),
+            'children' => $request->get('children'),
+            'want_children' => $request->get('want_children'),
+            'drinks' => $request->get('drinks'),
+            'smokes' => $request->get('smokes'),
+            'prefession' => $request->get('prefession'),
+            'interests' => $request->get('interests'),
+            'DOB' => $request->get('DOB'),
+            'location' => $request->get('location'),
+            'here_for' => $request->get('here_for'),
+            'height' => $request->get('height'),
+            'body_type' => $request->get('body_type')
         ]);
 
         return redirect()
@@ -73,7 +86,6 @@ class EditUserProfileController extends Controller
             'search_age_to' => $searchAgeRange[1],
             'search_male' => $request->get('search_male'),
             'search_female' => $request->get('search_female')
-
         ]);
 
         return redirect()

@@ -6,14 +6,16 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     use Notifiable;
 
     protected $fillable = [
-        'email',
-        'password'
+        'email'
     ];
 
     /**
@@ -22,7 +24,6 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password',
         'remember_token',
     ];
 
@@ -62,11 +63,12 @@ class User extends Authenticatable
 
     public function match(User $foreignUser)
     {
+        dd($foreignUser);
         $thisMatched = $this->belongsToMany('App\User', 'matches',
             'user_one', 'user_two')
             ->where('user_one', '=', $this->id)
             ->where('user_two', '=', $foreignUser->id)->getResults();
-
+            
         $matchedThis = $this->belongsToMany('App\User', 'matches',
             'user_two', 'user_one')
             ->where('user_two', '=', $this->id)
@@ -138,5 +140,18 @@ class User extends Authenticatable
             ->whereDoesntHave('dislikes', function ($query) use ($id) {
                 $query->where('user_one', $id);
             });
+    }
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public static function getCurrentUser(){
+        return Auth::user();
     }
 }
