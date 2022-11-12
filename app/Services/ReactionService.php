@@ -16,12 +16,12 @@ class ReactionService
             'user_two' => $otherUser->id
         ]);
 
-        if (!$user->match($otherUser) == null) {
+        /*if (!$user->match($otherUser) == null) {
             Mail::to($user->email)
                 ->queue(new SendMatchedEmail($user, $otherUser));
             Mail::to($otherUser->email)
                 ->queue(new SendMatchedEmail($otherUser, $user));
-        }
+        }*/
     }
 
     public function dislike($user, $otherUser)

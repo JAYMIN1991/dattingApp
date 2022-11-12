@@ -21,5 +21,19 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::post('app-login', 'Controller@login');
 Route::post('logout', 'Controller@login');
 Route::post('register', 'Controller@register');
+Route::get('remove-user', 'Controller@removeUserProfile');
+Route::post('update-user', 'Controller@updateUserProfile');
+Route::get('remove-image', 'Controller@removeImage');
+Route::get('image-list', 'Controller@getImagesList');
+
+Route::post('update-profile-picture', 'Controller@updateUserPicture');
+Route::post('insert-user-images', 'Controller@insertUserImages');
 Route::post('random-list', 'Controller@getRandomUsers');
+Route::post('get-near-users', 'Controller@getNearUserList');
 Route::post('get-location', 'Controller@getUserLocation');
+Route::post('get-user-details','Controller@getUserDetails');
+Route::post('get-match-users','Controller@getMatchUser');
+Route::post('user-like','Controller@like');
+Route::post('get-liked-user','Controller@getLikedUser');
+Route::post('get-likes-user','Controller@getLikesUser');
+Route::post('user-dislike','Controller@dislike');

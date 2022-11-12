@@ -86,7 +86,6 @@ class EditUserProfileController extends Controller
             'search_age_to' => $searchAgeRange[1],
             'search_male' => $request->get('search_male'),
             'search_female' => $request->get('search_female')
-
         ]);
 
         return redirect()

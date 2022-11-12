@@ -15,8 +15,7 @@ class User extends Authenticatable implements JWTSubject
     use Notifiable;
 
     protected $fillable = [
-        'email',
-        'password'
+        'email'
     ];
 
     /**
@@ -25,7 +24,6 @@ class User extends Authenticatable implements JWTSubject
      * @var array
      */
     protected $hidden = [
-        'password',
         'remember_token',
     ];
 
@@ -65,11 +63,12 @@ class User extends Authenticatable implements JWTSubject
 
     public function match(User $foreignUser)
     {
+        dd($foreignUser);
         $thisMatched = $this->belongsToMany('App\User', 'matches',
             'user_one', 'user_two')
             ->where('user_one', '=', $this->id)
             ->where('user_two', '=', $foreignUser->id)->getResults();
-
+            
         $matchedThis = $this->belongsToMany('App\User', 'matches',
             'user_two', 'user_one')
             ->where('user_two', '=', $this->id)
