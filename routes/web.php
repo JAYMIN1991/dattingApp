@@ -26,3 +26,6 @@ Route::put('/profile/settings', 'EditUserProfileController@updateSettings')->nam
 Route::delete('/profile', 'EditUserProfileController@destroyProfile')->name('profile.destroy');
 Route::post('/profile/like/{id}', 'ReactionController@like')->name('like');
 Route::post('/profile/dislike/{id}', 'ReactionController@dislike')->name('dislike');
+
+
+Route::post('/save-token', 'Controller@saveToken')->name('save-token');

@@ -67,6 +67,7 @@
                                 {{ __('Profile') }}
                             </a>
                         </li>
+                      
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('logout') }}"
                                onclick="event.preventDefault();
@@ -96,3 +97,73 @@
         font-size: larger;
     }
 </style>
+
+
+{{-- Notification script --}}
+@auth
+<script src="https://www.gstatic.com/firebasejs/7.23.0/firebase.js"></script>
+<script>
+    $(document).ready(function () {
+        initFirebaseMessagingRegistration();
+    });
+  
+    var firebaseConfig = {
+        apiKey: "XXXX",
+        authDomain: "XXXX.firebaseapp.com",
+        databaseURL: "https://XXXX.firebaseio.com",
+        projectId: "XXXX",
+        storageBucket: "XXXX",
+        messagingSenderId: "XXXX",
+        appId: "XXXX",
+        measurementId: "XXX"
+    };
+      
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+  
+    function initFirebaseMessagingRegistration() {
+            messaging
+            .requestPermission()
+            .then(function () {
+                return messaging.getToken()
+            })
+            .then(function(token) {
+                // console.log(token);
+   
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+  
+                $.ajax({
+                    url: '{{ route("save-token") }}',
+                    type: 'POST',
+                    data: {
+                        token: token
+                    },
+                    dataType: 'JSON',
+                    success: function (response) {
+                        alert('Token saved successfully.');
+                    },
+                    error: function (err) {
+                        console.log('User Chat Token Error'+ err);
+                    },
+                });
+  
+            }).catch(function (err) {
+                console.log('User Chat Token Error'+ err);
+            });
+     }  
+      
+    messaging.onMessage(function(payload) {
+        const noteTitle = payload.notification.title;
+        const noteOptions = {
+            body: payload.notification.body,
+            icon: payload.notification.icon,
+        };
+        new Notification(noteTitle, noteOptions);
+    });
+   
+</script>
+@endauth

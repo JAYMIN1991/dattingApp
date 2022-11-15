@@ -1305,10 +1305,52 @@ class Controller extends BaseController
 
             Chat::insert($request->only(['sender_id', 'receiver_id', 'message']));
 
+            //notification to device
+
+            $receiver = User::whereNotNull('device_token')->where('id', $request->receiver_id)->first();
+            if ($receiver) {
+                $SERVER_API_KEY = env('FCM_SERVER_KEY');
+
+                $data = [
+                    "registration_ids" => [$receiver->device_token],
+                    "notification" => [
+                        "title" => 'New Message',
+                        "body" => $request->message,
+                    ]
+                ];
+                $dataString = json_encode($data);
+
+                $headers = [
+                    'Authorization: key=' . $SERVER_API_KEY,
+                    'Content-Type: application/json',
+                ];
+
+                $ch = curl_init();
+
+                curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $dataString);
+
+                $response = curl_exec($ch);
+            }
+            //END Notification 
+
+
+
+
             return response()->json(['success' => true, 'message' => "Message Sent Successfully.", 'data' => ""]);
         } catch (Exception $error) {
             return response()->json(['success' => false, 'message' => "Something is Wrong."]);
         }
+    }
+
+    public function saveToken(Request $request)
+    {
+        auth()->user()->update(['device_token' => $request->token]);
+        return response()->json(['token saved successfully.']);
     }
 
     public function chat_users_list(Request $request)
