@@ -1303,8 +1303,21 @@ class Controller extends BaseController
                 return response()->json(['success' => false, 'message' => $validator->errors()->first()]);
             }
 
-            Chat::insert($request->only(['sender_id', 'receiver_id', 'message']));
 
+            $chat = new Chat();
+            $chat->sender_id = $request->sender_id;
+            $chat->receiver_id = $request->receiver_id;
+            $chat->message = $request->message;
+            $chat->save();
+
+            $created_at = $chat->created_at;
+            $updated_at = $chat->updated_at;
+            unset($chat->created_at);
+            unset($chat->updated_at);
+
+            // $chat_update = $chat->only('id')
+            $chat->create_at = $created_at ?  date('Y-m-d\TH:i:s', strtotime($created_at)) : null;
+            $chat->update_at = $updated_at ?  date('Y-m-d\TH:i:s', strtotime($updated_at)) : null;
             //notification to device
 
             $receiver = User::whereNotNull('device_token')->where('id', $request->receiver_id)->first();
@@ -1341,7 +1354,7 @@ class Controller extends BaseController
 
 
 
-            return response()->json(['success' => true, 'message' => "Message Sent Successfully.", 'data' => ""]);
+            return response()->json(['success' => true, 'message' => "Message Sent Successfully.", 'data' => ["message" => $chat]]);
         } catch (Exception $error) {
             return response()->json(['success' => false, 'message' => "Something is Wrong."]);
         }
@@ -1349,8 +1362,21 @@ class Controller extends BaseController
 
     public function saveToken(Request $request)
     {
-        auth()->user()->update(['device_token' => $request->token]);
-        return response()->json(['token saved successfully.']);
+
+        $validator = Validator::make($request->all(), [
+            'token' => 'required',
+            'login_user_id' => 'required',
+        ]);
+
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()]);
+        }
+
+        $user = User::find($request->login_user_id);
+        if (!$user) return response()->json(['success' => false, 'message' => "user not found"]);
+        $user->update(['device_token' => $request->token]);
+        return response()->json(['success' => true, 'message' => "token saved successfully.", 'data' => []]);
     }
 
     public function chat_users_list(Request $request)
@@ -1358,18 +1384,47 @@ class Controller extends BaseController
         try {
             $validator = Validator::make($request->all(), [
                 'login_user_id' => 'required',
+                'page_no' => 'sometimes|nullable|numeric'
             ]);
 
             if ($validator->fails()) {
                 return response()->json(['success' => false, 'message' => $validator->errors()->first()]);
             }
 
-            $chat_receiver_ids = Chat::where('sender_id', $request->login_user_id)->groupBy('receiver_id')->pluck('receiver_id')->toArray();
-            $chat_sender_ids = Chat::where('receiver_id', $request->login_user_id)->groupBy('sender_id')->pluck('sender_id')->toArray();
+            $login_user_id = $request->login_user_id;
+
+            $chat_receiver_ids = Chat::where('sender_id', $login_user_id)->groupBy('receiver_id')->pluck('receiver_id')->toArray();
+            $chat_sender_ids = Chat::where('receiver_id', $login_user_id)->groupBy('sender_id')->pluck('sender_id')->toArray();
 
             $user_ids = array_unique(array_merge($chat_receiver_ids, $chat_sender_ids), SORT_REGULAR);
 
-            $user_list = User::select('user_infos.name', 'users.id')->whereIn('users.id', $user_ids)->leftJoin('user_infos', 'user_infos.user_id', 'users.id')->get();
+            $users = User::select('user_infos.name', 'users.id', 'user_infos.profile_picture')->whereIn('users.id', $user_ids)
+                ->leftJoin('user_infos', 'user_infos.user_id', 'users.id');
+            if (isset($request->page_no) && !empty($request->page_no)) {
+                $limit = 10;
+                $start = (($request->page_no - 1) * $limit);
+                $users = $users->limit($limit)->offset($start);
+            }
+            $users = $users->get();
+
+            $user_list = [];
+            foreach ($users as $user) {
+                $chat = Chat::select('created_at', 'message')->where('sender_id', $login_user_id)->orWhere('receiver_id', $login_user_id)->latest()->first();
+                $total_chat_count = Chat::select('created_at', 'message')->where('sender_id', $login_user_id)->orWhere('receiver_id', $login_user_id)->count();
+                $read_chat_count = Chat::select('created_at', 'message')->where(function ($qeury) use ($login_user_id) {
+                    return $qeury->where('sender_id', $login_user_id)->orWhere('receiver_id', $login_user_id);
+                })->where('is_read', '1')->count();
+                $unread_chat_count = Chat::select('created_at', 'message')->where(function ($qeury) use ($login_user_id) {
+                    return $qeury->where('sender_id', $login_user_id)->orWhere('receiver_id', $login_user_id);
+                })->where('is_read', '0')->count();
+
+                $user->last_message = $chat ? $chat->message : null;
+                $user->total_chat_count = $total_chat_count;
+                $user->read_chat_count = $read_chat_count;
+                $user->unread_chat_count = $unread_chat_count;
+                $user->last_message_time_stamp = $chat ? date('Y-m-d\TH:i:s', strtotime($chat->created_at)) : null;
+                $user_list[] = $user;
+            }
 
             return response()->json(['success' => true, 'message' => "Chat list fetch successfully.", 'data' => ['user_list' => $user_list]]);
         } catch (Exception $error) {
@@ -1380,30 +1435,37 @@ class Controller extends BaseController
 
     public function user_chats_list(Request $request)
     {
-        try {
-            $validator = Validator::make($request->all(), [
-                'login_user_id' => 'required',
-                'chat_user_id' => 'required',
-            ]);
+        // try {
+        $validator = Validator::make($request->all(), [
+            'login_user_id' => 'required',
+            'chat_user_id' => 'required',
+            'page_no' => 'sometimes|nullable|numeric'
+        ]);
 
-            $login_user_id = $request->login_user_id;
-            $chat_user_id = $request->chat_user_id;
+        $login_user_id = $request->login_user_id;
+        $chat_user_id = $request->chat_user_id;
 
-            if ($validator->fails()) {
-                return response()->json(['success' => false, 'message' => $validator->errors()->first()]);
-            }
-
-            $chat_list = Chat::select('sender_id', 'receiver_id', 'message', 'is_read')->whereIn('sender_id', [$login_user_id, $chat_user_id])->WhereIn('receiver_id', [$login_user_id, $chat_user_id])->get();
-
-
-
-            Chat::where('sender_id', $chat_user_id)->Where('receiver_id', $login_user_id)->update(['is_read' => '1']);
-
-
-
-            return response()->json(['success' => true, 'message' => "Chat User list fetch successfully.", 'data' => ['user_list' => $chat_list]]);
-        } catch (Exception $error) {
-            return response()->json(['success' => false, 'message' => "Something is Wrong."]);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()]);
         }
+
+        $chat_list = Chat::select('sender_id', 'receiver_id', 'message', 'is_read')->selectRaw('DATE_FORMAT(created_at,"%Y-%m-%dT%H:%i:%s") as message_time')->whereIn('sender_id', [$login_user_id, $chat_user_id])->whereIn('receiver_id', [$login_user_id, $chat_user_id]);
+        // $chat_list = Chat::select('sender_id', 'receiver_id', 'message', 'is_read')->selectRaw("cast(`created_at as message_time) at time zone 'UTC'")->whereIn('sender_id', [$login_user_id, $chat_user_id])->whereIn('receiver_id', [$login_user_id, $chat_user_id]);
+        if (isset($request->page_no) && !empty($request->page_no)) {
+            $limit = 10;
+            $start = (($request->page_no - 1) * $limit);
+            $chat_list = $chat_list->limit($limit)->offset($start);
+        }
+        $chat_list = $chat_list->latest()->get();
+
+
+        Chat::where('sender_id', $chat_user_id)->Where('receiver_id', $login_user_id)->update(['is_read' => '1']);
+
+
+
+        return response()->json(['success' => true, 'message' => "Chat User list fetch successfully.", 'data' => ['user_chat_list' => $chat_list]]);
+        // } catch (Exception $error) {
+        //     return response()->json(['success' => false, 'message' => "Something is Wrong."]);
+        // }
     }
 }

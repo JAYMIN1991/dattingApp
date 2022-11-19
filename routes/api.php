@@ -39,5 +39,6 @@ Route::post('get-likes-user', 'Controller@getLikesUser');
 Route::post('user-dislike', 'Controller@dislike');
 
 Route::post('send_message', 'Controller@send_message');
+Route::post('saveToken', 'Controller@saveToken');
 Route::post('chat_users_list', 'Controller@chat_users_list');
 Route::post('user_chats_list', 'Controller@user_chats_list');
